@@ -15,7 +15,7 @@ filebeat.config.inputs:
 processors:
   - if:
       network:
-        host.ip: ["10.99.6.180/32","10.99.6.182/32","10.99.6.183/32","10.99.6.184/32","10.99.6.185/32"]
+        host.ip: ["1.2.3.4/32","105.2.2/32"]
     then: 
       - add_fields:
           target: ''
