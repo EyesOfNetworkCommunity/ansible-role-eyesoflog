@@ -1,0 +1,5 @@
+---
+
+#Official_Elasticsearch_role
+- src: https://github.com/elastic/ansible-elasticsearch.git
+  name: elasticsearch_eol

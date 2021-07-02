@@ -1,0 +1,33 @@
+all:
+  children:
+    elasticsearch_ingest_nodes:
+      hosts:
+        eol-elastic-01:
+        eol-elastic-02:
+
+    elasticsearch_master_initial_node:
+      hosts:
+        eol-elastic-01:
+    
+    elasticsearch_master_nodes:
+      children:
+        elasticsearch_master_initial_node:
+      hosts:
+        eol-elastic-02:
+        eol-kibana: # comment if Kibana node is not an Elasticsearch node.
+        
+    elasticsearch_nodes:
+      children:
+        elasticsearch_master_nodes:
+        elasticsearch_ingest_nodes:
+        elasticsearch_master_only_nodes:
+        kibana_nodes: # comment if Kibana node is not an Elasticsearch node.
+
+    #logstash_nodes:
+      #hosts:
+    filebeat_ingest_nodes:
+      hosts:
+        eol-elastic-01:
+    kibana_nodes:
+      hosts:
+        eol-kibana:

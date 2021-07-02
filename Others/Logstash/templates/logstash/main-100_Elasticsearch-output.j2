@@ -1,0 +1,13 @@
+output {
+  elasticsearch {
+    hosts =>  [{% for es_host in groups['elasticsearch_ingest_nodes'] %}"https://{{ es_host }}:{{ eol.cluster.es_api_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+    index => "%{[@metadata][target_index]}"
+    pipeline => "%{[@metadata][pipeline]}"
+    user => "{{ eol.cluster.api_logstash_username }}"
+    password => "{{ eol.cluster.api_logstash_password }}"
+    cacert => '/etc/logstash/certs/{{ eol.cluster.eol_ca_cert_name }}'
+    # For use with Data stream
+    ilm_enabled => false
+    "action" => "create"
+  }
+}

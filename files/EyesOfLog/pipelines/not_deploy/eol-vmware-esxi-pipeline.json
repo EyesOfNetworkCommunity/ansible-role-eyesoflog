@@ -1,0 +1,15 @@
+{
+  "description" : "EoL Axians - Pipeline for ESXI log",
+  "version" : 2021030201,
+  "processors": [
+    {}
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}, {{ _ingest.on_failure_processor_type }}, {{ _ingest.on_failure_processor_tag }}"
+      }
+    }
+  ]
+}

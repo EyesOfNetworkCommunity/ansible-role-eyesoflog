@@ -1,0 +1,34 @@
+input {
+  dead_letter_queue {
+    path => "/var/lib/logstash/dead_letter_queue/"
+    pipeline_id => "main"
+    tags => ["dead_letter_queue"]
+  }
+}
+
+filter {
+
+  mutate {
+    add_field => {
+        "reason" => "%{[@metadata][dead_letter_queue][reason]}"
+        "plugin_id" => "%{[@metadata][dead_letter_queue][plugin_id]}"
+        "plugin_type" => "%{[@metadata][dead_letter_queue][plugin_type]}"
+    }
+}
+
+}
+
+output {
+  elasticsearch {
+    hosts =>  [{% for es_host in groups['elasticsearch_ingest_nodes'] %}"https://{{ es_host }}:{{ eol.cluster.es_api_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+    index => "eol-default"
+    pipeline => "eol-default-pipeline"
+    user => "{{ eol.cluster.api_username }}"
+    password => "{{ eol.cluster.api_password }}"
+    cacert => '/etc/logstash/certs/{{ eol.cluster.eol_ca_cert_name }}'
+    # For use with Data stream
+    ilm_enabled => false
+    "action" => "create"
+  }   
+  
+}

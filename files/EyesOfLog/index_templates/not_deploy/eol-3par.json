@@ -1,0 +1,10 @@
+// WARNING : this JSON use component-template
+{
+    "version": 1,
+    "priority": 5,
+    "index_patterns": [
+      "eol-3par*"
+    ],
+    "data_stream": { },
+    "composed_of": ["eol-component-template_default_mapping", "eol-component-template_default_settings"]
+  }

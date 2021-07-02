@@ -1,0 +1,210 @@
+input {
+  tcp {
+    port => 5514
+    type => syslog
+    tags => ["tcp"]
+    dns_reverse_lookup_enabled => false
+  }
+  udp {
+    port => 5514
+    type => syslog
+    ecs_compatibility => v1
+  }
+}
+
+
+filter {
+
+  if "tcp" in [tags] {
+    mutate {
+      rename => { "host" => "[host][ip]" }
+    }
+  }
+
+  mutate {
+    copy => { "[host][ip]" => "[host][hostname]" }
+  }
+
+  dns {
+    reverse => [ "[host][hostname]" ]
+    action => "replace"
+  }
+
+
+# Filter by type logs
+
+  # UPS CBV Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.180/32","10.99.6.181/32","10.99.6.182/32","10.99.6.183/32","10.99.6.184/32","10.99.6.185/32","10.99.6.199/32","10.99.6.198/32" ]
+    add_tag => [ "physical","ups", "infra","CBV"]
+    add_field => { "[event][provider]" => "ups" }
+  }
+
+  # UPS AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.186/32","10.99.6.187/32","10.99.6.188/32","10.99.6.189/32","10.99.6.190/32","10.99.6.191/32","10.99.6.200/32","10.99.6.201/32" ]
+    add_tag => [ "physical","ups", "infra","AUB"]
+    add_field => { "[event][provider]" => "ups" }
+  }
+
+  # 3PAR CBV Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.56/32","10.99.6.58/32","10.99.6.50/32" ]
+    add_tag => [ "physical","3par", "infra","CBV"]
+    add_field => { "[event][provider]" => "3par" }
+  }
+
+  # 3PAR AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.57/32","10.99.6.55/32" ]
+    add_tag => [ "physical","3par", "infra","AUB"]
+    add_field => { "[event][provider]" => "3par" }
+  }
+
+  # 3PAR VAS Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.151.240.23/32" ]
+    add_tag => [ "physical","3par", "infra","VAS"]
+    add_field => { "[event][provider]" => "3par" }
+  }
+
+  # ESXI CBV Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.70/32","10.99.6.72/32", "10.99.6.80/32", "10.99.6.74/32", "10.99.6.82/32","10.99.6.76/32","10.99.6.84/32","10.99.6.78/32","10.99.6.159/32","10.99.6.94/32"]
+    add_tag => [ "physical","esxi", "infra","CBV","vmware"]
+    add_field => { "[event][provider]" => "vmware-esxi" }
+  }
+
+  # ESXI AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.71/32","10.99.6.79/32","10.99.6.73/32","10.99.6.81/32","10.99.6.75/32","10.99.6.83/32","10.99.6.77/32","10.99.6.158/32","10.99.6.93/32","10.99.6.69/32"]
+    add_tag => [ "physical","esxi", "infra","CBV","vmware"]
+    add_field => { "[event][provider]" => "vmware-esxi" }
+  }
+
+  # ESXI AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.151.234.34/32","10.151.235.205/32","10.96.38.8/32","10.151.238.144/32","10.98.23.12/32","10.151.236.211/32","10.151.235.5/32","10.98.248.55/32","10.98.3.9/32","10.151.238.9/32","10.96.36.128/32","10.96.36.131/32","10.151.239.140/32","10.96.7.7/32","10.151.242.17/32","10.151.240.21/32","10.151.240.22/32","10.151.236.145/32","10.97.1.3/32","10.151.236.85/32"]
+    add_tag => [ "physical","esxi", "infra","SITE","vmware"]
+    add_field => { "[event][provider]" => "vmware-esxi" }
+  }
+
+  # VCSA Vcenter appliance Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.2.66/32"]
+    add_tag => [ "vm","vcsa6", "infra","vmware"]
+    add_field => { "[event][provider]" => "vmware-vcsa" }
+  }
+  
+  # SWITCH Datacenter CBV Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.2.246/32","10.99.1.246/32"]
+    add_tag => [ "physical", "switch","HP","CBV"]
+    add_field => { "[event][provider]" => "switch-dc" }
+  }
+
+  # SWITCH Datacenter AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.2.247/32","10.99.1.247/32"]
+    add_tag => [ "physical", "switch","HP","AUB"]
+    add_field => { "[event][provider]" => "switch-dc" }
+  }
+
+  # SWITCH SAN AUB Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.59/32","10.99.6.61/32"]
+    add_tag => [ "physical", "switch","SAN","AUB"]
+    add_field => { "[event][provider]" => "switch-san" }
+  }
+
+  # SWITCH SAN CBV Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.60/32","10.99.6.62/32"]
+    add_tag => [ "physical", "switch","SAN","CBV"]
+    add_field => { "[event][provider]" => "switch-san" }
+  }
+
+  # Firewall ASA Datacenter Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.1.236/32"]
+    add_tag => [ "physical", "firewall","Cisco ASA","CBV"]
+    add_field => { "[event][provider]" => "firewall-asa" }
+  }
+
+
+  # Firewall ASA Datacenter Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.1.237/32"]
+    add_tag => [ "physical", "firewall","Cisco ASA","AUB"]
+    add_field => { "[event][provider]" => "firewall-asa" }
+  }
+
+  # F5 WAF Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.222/32","10.99.6.223/32","10.99.6.224/32"]
+    add_tag => [ "vm", "waf","F5"]
+    add_field => { "[event][provider]" => "waf-f5" }
+  }
+
+
+  # ILO Servers Log - filter on ip address
+  cidr {
+    address => [ "%{[host][ip]}"]
+    network => [ "10.99.6.1/32","10.99.6.3/32","10.99.6.13/32","10.99.6.29/32","10.99.6.15/32","10.99.6.31/32","10.99.6.17/32","10.99.6.33/32","10.99.6.19/32","10.99.6.35/32","10.99.6.21/32","10.99.6.65/32","10.99.6.67/32","10.99.6.43/32","10.151.234.31/32","10.151.235.196/32","10.96.38.202/32","10.151.238.132/32","10.99.6.2/32","10.99.6.4/32","10.99.6.14/32","10.99.6.30/32","10.99.6.16/32","10.99.6.32/32","10.99.6.18/32","10.99.6.34/32","10.99.6.20/32","10.99.6.36/32","10.99.6.22/32","10.99.6.66/32","10.99.6.68/32","10.99.6.44/32","10.151.236.4/32","10.151.236.212/32","10.151.236.201/32","10.151.235.4/32","10.98.248.220/32","10.98.3.207/32","10.151.238.4/32","10.96.36.127/32","10.96.36.130/32","10.151.239.132/32","10.96.7.206/32","10.151.242.16/32","10.151.240.11/32","10.151.240.12/32","10.151.240.17/32","10.151.240.4/32","10.151.240.30/32","10.151.236.132/32","10.151.237.4/32","10.151.236.68/32"]
+    add_tag => [ "physical", "ILO","infra"]
+    add_field => { "[event][provider]" => "infra-ilo" }
+  }
+
+# Final transformation
+  if "devparsing" in [tags]
+  {
+    mutate {
+      replace => { "[event][provider]" => "devparsing" }
+    }
+  }
+  if ![event][provider]
+  {
+      mutate 
+      {
+        #add_field => { "[event][provider]" => "default" }
+        add_field => { 
+          "[@metadata][target_index]" => "eol-default" 
+          "[@metadata][pipeline]" => "eol-default-pipeline"
+          }
+      }
+  }
+
+# Fix index and pipeline if not defined before
+
+    if ![@metadata][target_index]
+    {
+      mutate {
+          add_field => { 
+            "[@metadata][target_index]" => "eol-%{[event][provider]}" 
+          }
+      }
+    }
+    
+    if ![@metadata][pipeline]
+    {
+      mutate {
+        add_field => { "[@metadata][pipeline]" => "eol-%{[event][provider]}-pipeline" }
+      }
+    }
+}

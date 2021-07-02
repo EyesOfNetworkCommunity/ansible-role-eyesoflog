@@ -1,0 +1,13 @@
+//PUT _index_template/eol-winlogbeat-default
+{
+  "priority": 4,
+  "index_patterns": [
+    "eol-winlogbeat-*"
+  ],
+  "data_stream": {
+    "hidden": false
+  },
+  "composed_of": [
+    "eol-component-template_winlogbeat-default"
+  ]
+}

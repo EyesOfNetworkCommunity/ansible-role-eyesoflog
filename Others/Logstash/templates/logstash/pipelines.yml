@@ -1,0 +1,10 @@
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+#   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+
+- pipeline.id: main
+  path.config: "/etc/logstash/conf.d/main-*.conf"
+  dead_letter_queue.enable: true
+- pipeline.id: dead_letter_queue
+  path.config: "/etc/logstash/conf.d/dead_letter_queue-*.conf"
+  dead_letter_queue.enable: false

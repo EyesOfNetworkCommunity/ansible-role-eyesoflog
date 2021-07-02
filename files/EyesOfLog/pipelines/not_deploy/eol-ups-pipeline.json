@@ -1,0 +1,52 @@
+{
+  "description" : "EoL Axians - Pipeline Schneider UPS log",
+  "version" : 2021030201,
+  "processors": [
+    {
+      "set" : 
+      {
+        "field" : "event.ingested",
+        "value" : "{{_ingest.timestamp}}"
+      }
+    },
+    {
+      "set" : 
+      {
+        "field" : "event.orginial",
+        "value" : "{{message}}"
+      } 
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "<%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:logtime} %{DATA:source.ip} %{GREEDYDATA:message}",
+          "<%{POSINT:log.syslog.priority}>%{DATESTAMP:logtime} %{DATA:source.ip} %{GREEDYDATA:message}",
+          "%{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "date" :{
+        "field": "logtime",
+        "target_field": "event.created",
+        "formats" : ["YYYY-MM-DD HH:mm:ss","MM/dd/YYYY HH:mm:ss","MMM dd HH:mm:ss"],
+        "ignore_failure": true
+      }
+    },
+    {
+      "remove": {
+        "field": "logtime"
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}"
+      }
+    }
+  ]
+}

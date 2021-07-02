@@ -1,0 +1,20 @@
+---
+
+eol:
+  cluster:
+    name: "EyesOfLog_Cluster"
+    es_api_port: 9200
+    es_transport_port: 9300
+    
+    # User
+    api_username: "elastic"
+    api_password: "elastic"
+    kibana_username: "kibana_system"
+    kibana_password: "eol_kibana"
+    kibana_monitor_username: "remote_monitoring_user"
+    kibana_monitor_password: "eol_Kibana_monitor"
+
+    kibana_server_port: 5601
+    kibana_encryptionKey: "adfr452dgj_sdgfg-5qaf!ffq@xD582qsqs45aE0L2ddqq95z" # Generate an encryption key
+    eol_ca_cert_name: "EoL.crt"
+    #ssl_key_passphrase: "adfd5865Dnc!ds5547qad5f8g6g2abyctd" # Uncomment if private key is encrypted. (see README)

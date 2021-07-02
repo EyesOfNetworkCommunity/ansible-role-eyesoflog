@@ -1,0 +1,33 @@
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/messages
+  fields_under_root: true
+  fields: {event.provider: messages}
+
+logging.level: warning
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# ====================== Elasticsearch template settings =======================
+
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+# ================================== Outputs ===================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+# ---------------------------- Elasticsearch Output ----------------------------
+output.elasticsearch:
+  hosts: ["IP_INGEST_NODE:9200"]
+  protocol: "https"
+  username: "USERNAME_A_REMPLIR"
+  password: "MDP_A_REMPLIR"
+  index: "eol-filebeat-unix-%{[event][provider]}"
+  pipeline: "eol-filebeat-unix-%{[event][provider]}-pipeline"
+  protocol: "https"

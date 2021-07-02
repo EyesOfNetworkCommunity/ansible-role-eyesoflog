@@ -1,0 +1,67 @@
+# Eyes of Log - Deploy Filebeat
+# Axians - Brice VALENZA
+---
+- name: Install Filebeat for ingest Syslog on Eyes of Log
+  hosts: filebeat_ingest_nodes
+  vars:
+
+  tasks:
+    - name: Install Filebeat | Ensure all pre-requisites packages are installed
+      become: yes
+      yum:
+        name: "filebeat"
+        state: present
+
+    - name: Install Filebeat | Copy certificates
+      become: yes
+      copy:
+        src: "files/certs/{{ item }}"
+        dest: /etc/filebeat/certs/
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - "{{ inventory_hostname }}_privatekey.pem"
+        - "{{ inventory_hostname }}.crt"
+        - "{{ eol.cluster.eol_ca_cert_name }}"
+        
+    - name: Install Filebeat | Configure application
+      become: yes
+      template:
+        src: templates/filebeat.j2
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart filebeat
+
+    - name: Create Configs directory if it does not exist
+      ansible.builtin.file:
+        path: /etc/filebeat/configs/
+        state: directory
+        mode: '0755'
+  
+    - name: Install Filebeat | Configure Syslog input
+      become: yes
+      template:
+        src: templates/filebeat_syslog_input.j2
+        dest: /etc/filebeat/configs/filebeat_syslog_input.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart filebeat
+
+      
+    - name: Install Filebeat | Enable and start service
+      become: yes
+      systemd:
+        name: filebeat
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart filebeat
+      become: yes
+      systemd:
+        name: filebeat
+        state: restarted

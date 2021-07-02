@@ -1,0 +1,48 @@
+# Eyes of Log - Elasticsearch Installation Node.
+# Axians - Brice VALENZA
+
+---
+- name: Install Elasticsearch on Nodes
+  hosts: elasticsearch_nodes
+  roles:
+    - role: elasticsearch_eol
+
+  vars:
+    es_version: 7.13.0
+    es_data_dirs: 
+      - "{{ eol.es_data_dir | default('/opt/elasticsearch/data')}}"
+    es_log_dir: "{{ eol.es_log_dir | default('/var/log/eol/elasticsearch/') }}"
+    es_config:
+      node.name: "{{ inventory_hostname }}"
+      cluster.name: "{{ eol.cluster.name }}"
+      cluster.initial_master_nodes: "{{ hostvars[inventory_hostname].groups.elasticsearch_master_initial_node }}"
+      discovery.seed_hosts: "{{ hostvars[inventory_hostname].groups.elasticsearch_master_nodes }}"
+      http.port: "{{ eol.cluster.es_api_port }}"
+      transport.port: "{{ eol.cluster.es_transport_port }}"
+      node.roles: "{{ eol['roles'] }}" # Use bracket syntax to avoid adding quotes
+      bootstrap.memory_lock: true
+      network.host: 0.0.0.0
+      xpack.monitoring.collection.enabled: true
+    es_heap_size: "{{ (((ansible_facts['memtotal_mb'] / 1024) | round | int) / 2) | round | int }}g"
+    es_api_port: "{{ eol.cluster.es_api_port }}"
+    es_api_basic_auth_username: "{{ eol.cluster.api_username }}"
+    es_api_basic_auth_password: "{{ eol.cluster.api_password }}"
+    es_users:
+       native:
+        #elastic:
+          #password: "NEWPASSWORD" # Uncomment one time if you want change elastic password and Update group_vars/all api_password after 
+        kibana_system:
+           password: "{{ eol.cluster.kibana_password }}"
+        remote_monitoring_user:
+          password: "{{ eol.cluster.kibana_monitor_password }}"
+    es_delete_unmanaged_native: false
+    es_delete_unmanaged_file: false
+    es_enable_http_ssl: true
+    es_enable_transport_ssl: true
+    es_validate_certs: no # See isue https://github.com/elastic/ansible-elasticsearch/issues/679
+    
+# Générer les certificats et les mettres dans le dossier /files/certs/
+    es_ssl_key: "files/certs/{{ inventory_hostname }}_privatekey.pem"
+    #es_ssl_key_password: "{{ eol.cluster.ssl_key_passphrase }}"
+    es_ssl_certificate: "files/certs/{{ inventory_hostname }}.crt"
+    es_ssl_certificate_authority: "files/certs/{{ eol.cluster.eol_ca_cert_name }}"

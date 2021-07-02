@@ -1,0 +1,61 @@
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/eol/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+filebeat.config.inputs:
+  enabled: true
+  path: configs/*.yml
+
+
+{% if 'filebeat_ingest_nodes' in group_names %}
+processors:
+  - if:
+      network:
+        host.ip: ["10.99.6.180/32","10.99.6.182/32","10.99.6.183/32","10.99.6.184/32","10.99.6.185/32"]
+    then: 
+      - add_fields:
+          target: ''
+          fields:
+            event.provider : "ups"
+            pipeline : "ups"
+
+  - if:
+      network:
+        host.ip: ["1.1.1.1/32"]
+    then: 
+      - add_fields:
+          target: ''
+          fields:
+            event.provider : "default"
+            pipeline : "default"
+
+  
+  - if:
+      not:
+        has_fields: ['event.provider']
+    then:
+      - add_fields:
+          target: ''
+          fields:
+            event.provider : "default"
+            pipeline : "default"
+{% endif %}
+
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+output.elasticsearch:
+  hosts: [{% for es_host in groups['elasticsearch_ingest_nodes'] %}"https://{{ es_host }}:{{ eol.cluster.es_api_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  username: "{{ eol.cluster.api_username }}"
+  password: "{{ eol.cluster.api_password }}"
+  protocol: "https"
+  ssl.certificate_authorities: ["/etc/metricbeat/certs/{{ eol.cluster.eol_ca_cert_name }}"]
+  index: "eol-%{[event][provider]}"
+  pipeline: "eol-%{[pipeline]}-pipeline"
+
+
+logging.level: debug

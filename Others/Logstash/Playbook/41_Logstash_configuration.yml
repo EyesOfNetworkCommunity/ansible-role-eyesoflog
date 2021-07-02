@@ -1,0 +1,39 @@
+# Eyes of Log - Logstash Installation Node on CentOs / RedHat
+# Axians Cloud Builder - Brice VALENZA Mars 2021.
+---
+- name: Install Logstash
+  hosts: logstash_nodes
+  vars:
+    logstash_repo_name : "7.x"
+
+  tasks:
+    - name: copy logstash configuration
+      become: yes
+      copy:
+        src: "templates/logstash/{{ item }}"
+        dest: /etc/logstash/
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - "pipelines.yml"
+        - "logstash.yml"
+
+    - name: Create Logstash conf.d configuration files.
+      become: yes
+      template:
+        src: "{{ item }}"
+        dest: "/etc/logstash/conf.d/{{ item | basename  | splitext | first }}.conf"
+        owner: root
+        group: root
+        mode: 0644
+      with_fileglob:
+        - "templates/logstash/*.j2"
+      notify: restart logstash
+
+  handlers:
+    - name: restart logstash
+      become: yes
+      systemd:
+        name: logstash
+        state: restarted

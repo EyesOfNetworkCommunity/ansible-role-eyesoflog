@@ -1,0 +1,11 @@
+// Template component with minimal index setting
+{
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "eol-ilm-default"
+    }
+  },
+  "_meta": {
+    "description": "EyesOfLog Default"
+  }
+}

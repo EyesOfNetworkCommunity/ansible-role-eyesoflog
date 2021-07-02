@@ -1,0 +1,134 @@
+{
+  "description" : "EoL Axians - Pipeline for 3PAR",
+  "version" : 2021030201,
+  "processors" : [
+    {
+      "set" : 
+      {
+        "field" : "event.ingested",
+        "value" : "{{_ingest.timestamp}}"
+      }
+    },
+    {
+      "set" : 
+      {
+        "field" : "event.original",
+        "value" : "{{message}}"
+      } 
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "<%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:timestamp} %{DATA:host.name} %{SPACE}%{GREEDYDATA:message}",
+          "<%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:timestamp} %{DATA:host.name} %{GREEDYDATA:message}",
+          "%{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "%{DATA:event.category} %{GREEDYDATA:threepar_message}",
+          "%{GREEDYDATA:threepar_message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'cli_cmd_err' || ctx.event.category == 'cli_command'",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action} {%{DATA:user.name} %{DATA} %{IP:source.ip} %{DATA:event.id}} {%{DATA:threepar_message}}",
+          "%{DATA:event.action} {%{DATA:user.name} %{DATA} %{IP:source.ip}:%{POSINT:source.port} %{DATA:event.id}} {%{DATA:threepar_message}}",
+          "%{DATA:event.action} {%{DATA:user.name} %{DATA} %{IP:source.ip}:%{POSINT:source.port} %{DATA:event.id}} %{GREEDYDATA:threepar_message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'sr_alert_rcopy'",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action}:%{DATA} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'task_complete'",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action}:%{DATA:event.id} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'sr_alert_port'",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action}:%{DATA} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'cli_auth_fail'",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action} { %{IP:source.ip} %{DATA:source.port}} {%{DATA:message}}",
+          "%{DATA:event.action} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "if" : "ctx.event.category == 'removed_obj' || ctx.event.category == 'new_obj' ",
+        "field" : "threepar_message",
+        "patterns" : [
+          "%{DATA:event.action}:%{DATA:event.id}:%{IP:source.ip}:%{DATA:user.name} %{GREEDYDATA:message}",
+          "%{DATA:event.action}:%{DATA:event.id} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "date" : {
+        "on_failure" : [
+          {
+            "append" : {
+              "field" : "error.message",
+              "value" : "{{ _ingest.on_failure_message }}, {{ _ingest.on_failure_processor_type }}, {{ _ingest.on_failure_processor_tag }}"
+            }
+          }
+        ],
+        "field" : "timestamp",
+        "target_field" : "@timestamp",
+        "formats" : [
+          "MMM  d HH:mm:ss",
+          "MMM dd HH:mm:ss",
+          "MMM d HH:mm:ss",
+          "ISO8601"
+        ],
+        "timezone" : "Europe/Paris"
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}, {{ _ingest.on_failure_processor_type }}, {{ _ingest.on_failure_processor_tag }}"
+      }
+    }
+  ]
+}

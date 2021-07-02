@@ -1,0 +1,198 @@
+{
+  "description" : "EoL Axians -  Pipeline for parsing nagios core log",
+  "version" : 2021030201,
+  "processors" : [
+    {
+      "set" : {
+        "field" : "pipeline",
+        "value" : "filebeat-nagios-core"
+      }
+    },
+    {
+      "set" : {
+        "field" : "event.original",
+        "value" : "{{message}}"
+      }
+    },
+    {
+      "set" : {
+        "field" : "event.created",
+        "value" : "{{@timestamp}}"
+      }
+    },
+    {
+      "set" : {
+        "field" : "event.module",
+        "value" : "nagios"
+      }
+    },
+    {
+      "set" : {
+        "field" : "event.dataset",
+        "value" : "nagios.core"
+      }
+    },
+    {
+      "set" : {
+        "field" : "service.name",
+        "value" : "nagios"
+      }
+    },
+    {
+      "set" : {
+        "field" : "service.type",
+        "value" : "monitoring"
+      }
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>HOST) (?<event.action>ALERT): %{DATA:nagios.host.name};%{DATA:nagios.host.status};%{DATA:nagios.state};%{NUMBER:nagios.attempt};%{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>HOST) (?<event.action>DOWNTIME ALERT): %{DATA:nagios.host.name};%{DATA:nagios.host.status}; %{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>HOST) (?<event.action>FLAPPING ALERT): %{DATA:nagios.host.name};%{DATA:nagios.host.status}; %{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>HOST) (?<event.action>NOTIFICATION): %{DATA:nagios.contact};%{DATA:nagios.host.name};%{DATA:nagios.host.status};%{DATA:nagios.handler};%{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>SERVICE) (?<event.action>ALERT): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{DATA:nagios.state};%{NUMBER:nagios.attempt};%{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>SERVICE) (?<event.action>DOWNTIME ALERT): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status}; %{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>SERVICE) (?<event.action>FLAPPING ALERT): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status}; %{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>SERVICE) (?<event.action>NOTIFICATION): %{DATA:nagios.contact};%{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{DATA:nagios.handler};%{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>External command)%{SPACE}(?<event.level>error): %{DATA:error.message}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>wproc):%{SPACE}%{GREEDYDATA:error.message}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>CURRENT SERVICE STATE): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{DATA:nagios.state};%{NUMBER:nagios.attempt};%{GREEDYDATA:nagios.output}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<nagios.type>External command) (?<event.level>error):%{SPACE}%{GREEDYDATA:error.message}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.level>Error):%{SPACE}%{GREEDYDATA:error.message}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.level>Warning):%{SPACE}Check of service '%{DATA:nagios.service.name}' on host '%{DATA:nagios.host.name}' (?<event.kind>timed out) after %{GREEDYDATA:nagios.timeout}!""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.level>Warning):%{SPACE}%{GREEDYDATA:error.message}""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.action>Auto-save of retention data) %{DATA:event.outcome}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.type>EXTERNAL COMMAND): (?<event.action>PROCESS_HOST_CHECK_RESULT);%{DATA:nagios.host.name};%{DATA:nagios.host.status};%{GREEDYDATA:nagios.output}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.type>EXTERNAL COMMAND): (?<event.action>PROCESS_SERVICE_CHECK_RESULT);%{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{GREEDYDATA:nagios.output}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.action>PASSIVE HOST CHECK): %{DATA:nagios.host.name};%{DATA:nagios.host.status};%{GREEDYDATA:nagios.output}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.action>PASSIVE SERVICE CHECK): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{GREEDYDATA:nagios.output}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.action>GLOBAL SERVICE EVENT HANDLER): %{DATA:nagios.host.name};%{DATA:nagios.service.name};%{DATA:nagios.service.status};%{DATA:nagios.state};%{DATA:nagios.attempt};%{GREEDYDATA:nagios.output}$""",
+          """\[%{NUMBER:nagios.timestamp_epoch}] (?<event.action>GLOBAL HOST EVENT HANDLER): %{DATA:nagios.host.name};%{DATA:nagios.host.status};%{DATA:nagios.state};%{DATA:nagios.attempt};%{GREEDYDATA:nagios.output}$"""
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "date" : {
+        "field" : "nagios.timestamp_epoch",
+        "target_field" : "@timestamp",
+        "formats" : [
+          "UNIX"
+        ],
+        "ignore_failure" : true
+      }
+    },
+    {
+      "remove" : {
+        "field" : "nagios.timestamp_epoch"
+      }
+    },
+    {
+      "lowercase" : {
+        "field" : "event.level",
+        "ignore_missing" : true
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.service.status",
+        "value" : "WARNING",
+        "if" : "ctx.event?.level == 'warning'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.service.status",
+        "value" : "OK",
+        "if" : "ctx.nagios?.service?.status == '0'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.service.status",
+        "value" : "WARNING",
+        "if" : "ctx.nagios?.service?.status == '1'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.service.status",
+        "value" : "CRITICAL",
+        "if" : "ctx.nagios?.service?.status == '2'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.service.status",
+        "value" : "UNKNOWN",
+        "if" : "ctx.nagios?.service?.status == '3'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.host.status",
+        "value" : "UP",
+        "if" : "ctx.nagios?.host?.status == '0'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.host.status",
+        "value" : "DOWN",
+        "if" : "ctx.nagios?.host?.status == '1'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.host.status",
+        "value" : "UNREACHABLE",
+        "if" : "ctx.nagios?.host?.status == '2'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.type",
+        "value" : "SERVICE",
+        "if" : "ctx.event?.action == 'PROCESS_SERVICE_CHECK_RESULT'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.type",
+        "value" : "HOST",
+        "if" : "ctx.event?.action == 'PROCESS_HOST_CHECK_RESULT'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.type",
+        "value" : "SERVICE",
+        "if" : "ctx.event?.action == 'PASSIVE SERVICE CHECK'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.type",
+        "value" : "HOST",
+        "if" : "ctx.event?.action == 'PASSIVE HOST CHECK'"
+      }
+    },
+    {
+      "set" : {
+        "field" : "nagios.type",
+        "value" : "SERVICE",
+        "if" : "ctx.nagios?.service?.name != null"
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}"
+      }
+    }
+  ]
+}

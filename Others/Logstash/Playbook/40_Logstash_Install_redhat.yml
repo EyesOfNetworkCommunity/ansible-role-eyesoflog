@@ -1,0 +1,59 @@
+# Eyes of Log - Logstash Installation Node on CentOs / RedHat
+# Axians Cloud Builder - Brice VALENZA Mars 2021.
+---
+- name: Install Logstash
+  hosts: logstash_nodes
+  vars:
+    logstash_repo_name : "7.x"
+
+  tasks:
+    - name: RedHat - add logstash repo
+      become: yes
+      template:
+        src: 'logstash.repo'
+        dest: '/etc/yum.repos.d/logstash-{{ logstash_repo_name }}.repo'
+
+    - name: Install logstash | Ensure logstash packages is installed
+      become: yes
+      yum:
+        name: logstash
+        state: latest
+        update_cache: yes
+
+    - name: Installing logstash | Manage certificates
+      block:
+        - name: Install logstash | Ensure cert folder eists
+          become: yes
+          file:
+            path: /etc/logstash/certs
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+    - name: Install logstash | Copy certificates
+      become: yes
+      copy:
+        src: "files/certs/{{ item }}"
+        dest: /etc/logstash/certs/
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - "{{ inventory_hostname }}_privatekey.pem"
+        - "{{ inventory_hostname }}.crt"
+        - "{{ eol.cluster.eol_ca_cert_name }}"
+
+    - name: Install logstash | Enable and start service
+      become: yes
+      systemd:
+        name: logstash
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart logstash
+      become: yes
+      systemd:
+        name: logstash
+        state: restarted

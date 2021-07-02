@@ -1,0 +1,14 @@
+https://github.com/hpcugent/logstash-patterns/blob/master/files/grok-patterns
+
+<132>May 28 10:28:32 MONSERVEUR.MONDOMAIN.FR warning tmm1[15629]: 01260013:4: SSL Handshake failed for TCP 185.172.XX.YY:57947 -> 10.ZZ.BB.13:443
+
+    1) Extraction Syslog
+        <%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:logtime} %{DATA:host.name} %{DATA:log.level} %{GREEDYDATA:message}
+
+<14>May 28 07:57:31 10.99.ZZ.XXX NTP update failure. 0x003F
+    1) Extraction Syslog
+        <%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:logtime} %{DATA:source.ip} %{GREEDYDATA:message}
+
+<8>05/28/2021 08:37:24 10.99.ZZ.XXX APC: Test Syslog.
+    1) Extraction Syslog
+        <%{POSINT:log.syslog.priority}>%{DATESTAMP:logtime} %{DATA:source.ip} %{GREEDYDATA:message}

@@ -1,0 +1,69 @@
+# Eyes of Log - Kibana Installation Node on CentOs / RedHat
+# Axians - Brice VALENZA
+
+---
+- name: Install Kibana
+  hosts: kibana_nodes
+  vars:
+    kibana_repo_name : "7.x"
+
+  tasks:
+    - name: RedHat - add Kibana repo
+      become: yes
+      template:
+        src: 'kibana.repo'
+        dest: '/etc/yum.repos.d/kibana-{{ kibana_repo_name }}.repo'
+
+    - name: Install Kibana | Ensure kibana packages is installed
+      become: yes
+      yum:
+        name: kibana
+        state: latest
+        update_cache: yes
+
+    - name: Installing Kibana | Manage certificates
+      block:
+        - name: Install Kibana | Ensure cert folder eists
+          become: yes
+          file:
+            path: /etc/kibana/certs
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+    - name: Install Kibana | Copy certificates
+      become: yes
+      copy:
+        src: "files/certs/{{ item }}"
+        dest: /etc/kibana/certs/
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - "{{ inventory_hostname }}_privatekey.pem"
+        - "{{ inventory_hostname }}.crt"
+        - "{{ eol.cluster.eol_ca_cert_name }}"
+
+    - name: Install Kibana | Configure application
+      become: yes
+      template:
+        src: templates/kibana.j2
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart kibana
+
+    - name: Install Kibana | Enable and start service
+      become: yes
+      systemd:
+        name: kibana
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart kibana
+      systemd:
+        name: kibana
+        state: restarted

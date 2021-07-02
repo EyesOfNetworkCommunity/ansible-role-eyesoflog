@@ -1,0 +1,50 @@
+{
+  "description" : "EoL Axians - Pipeline for WAF F5 log",
+  "version" : 2021030201,
+  "processors": [
+    {
+      "set" : 
+      {
+        "field" : "event.ingested",
+        "value" : "{{_ingest.timestamp}}"
+      }
+    },
+    {
+      "set" : 
+      {
+        "field" : "event.orginial",
+        "value" : "{{message}}"
+      } 
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "<%{POSINT:log.syslog.priority}>%{SYSLOGTIMESTAMP:logtime} %{DATA:host.name} %{DATA:log.level} %{GREEDYDATA:message}",
+          "%{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "date" :{
+        "field": "logtime",
+        "target_field": "@timestamp",
+        "formats" : ["YYYY-MM-DD HH:mm:ss.SSS"]
+      }
+    },
+    {
+      "remove": {
+        "field": "logtime"
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}"
+      }
+    }
+  ]
+}

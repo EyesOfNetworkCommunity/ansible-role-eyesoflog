@@ -1,0 +1,47 @@
+{
+  "description" : "EoL Axians - Pipeline for VCenter Server Appliance log",
+  "version" : 2021030201,
+  "processors": [
+    {
+      "set" : {
+        "tag" : "set_eventoriginal",
+        "field" : "event.original",
+        "value" : "{{message}}"
+      }
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "<%{POSINT:log.syslog.priority}>%{POSINT:log.syslog.version} %{TIMESTAMP_ISO8601:@timestamp} %{SYSLOGHOST:host.name} %{PROG:process.name} %{GREEDYDATA:message}"
+        ],
+        "ignore_missing" : true
+      }
+    },
+    {
+      "grok" : {
+        "field" : "message",
+        "patterns" : [
+          "%{POSINT:process.pid} %{GREEDYDATA:vcenter.unknwon} Event \[%{POSINT:event.id}\] \[%{POSINT:event.sequence}-%{POSINT:vcenter.event.total_sequence_number}\] \[%{TIMESTAMP_ISO8601:timestamp}\] \[%{DATA:vcenter.event.type}\] \[%{DATA:log.level}\] \[%{DATA:user.name}\] %{GREEDYDATA:vcenter.notparsed_message}","<%{POSINT:log.syslog.priority}>%{POSINT:log.syslog.version} %{TIMESTAMP_ISO8601:@timestamp} %{SYSLOGHOST:host.name} %{PROG:process.name} %{GREEDYDATA:message}",
+          "%{POSINT:process.pid} %{GREEDYDATA:vcenter.notparsed_message}"
+        ],
+        "ignore_missing" : true,
+        "if": "ctx?.process?.name =='vpxd'"
+      }
+    },
+    {
+      "drop": {
+        "if" : "ctx?.user?.name == 'VSPHERE.LOCAL\\\\nagios'",
+        "ignore_failure": true
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error.message",
+        "value" : "{{ _ingest.on_failure_message }}, {{ _ingest.on_failure_processor_type }}, {{ _ingest.on_failure_processor_tag }}"
+      }
+    }
+  ]
+}

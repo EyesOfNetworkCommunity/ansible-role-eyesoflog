@@ -1,0 +1,89 @@
+# Eyes of Log - Deploy MetricBeat
+# Axians - Brice VALENZA
+
+---
+- name: Install MetricBeat on Eyes of Log
+  hosts: elasticsearch_nodes:kibana_nodes
+  vars:
+
+  tasks:
+    - name: Install Metricbeat | Ensure all pre-requisites packages are installed
+      become: yes
+      yum:
+        name: "metricbeat"
+        state: present
+
+    - name: Install Metricbeat | Copy certificates
+      become: yes
+      copy:
+        src: "files/certs/{{ item }}"
+        dest: /etc/metricbeat/certs/
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - "{{ inventory_hostname }}_privatekey.pem"
+        - "{{ inventory_hostname }}.crt"
+        - "{{ eol.cluster.eol_ca_cert_name }}"
+        
+    - name: Install Metricbeat | Configure application
+      become: yes
+      template:
+        src: templates/metricbeat.j2
+        dest: /etc/metricbeat/metricbeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart metricbeat
+
+  handlers:
+    - name: restart metricbeat
+      become: yes
+      systemd:
+        name: metricbeat
+        state: restarted
+
+- name: Activate Elasticsearch Monitoring
+  hosts: elasticsearch_nodes
+  vars:
+
+  tasks:      
+    - name: Metricbeat | Configure module elasticsearch
+      become: yes
+      template:
+        src: templates/metricbeat_elasticsearch-xpack.j2
+        dest: /etc/metricbeat/modules.d/elasticsearch-xpack.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart metricbeat
+
+  handlers:
+    - name: restart metricbeat
+      become: yes
+      systemd:
+        name: metricbeat
+        state: restarted
+
+
+- name: Activate Kibana Monitoring
+  hosts: kibana_nodes
+  vars:
+
+  tasks:
+    - name: Metricbeat | Configure module kibana
+      become: yes
+      template:
+        src: templates/metricbeat_kibana-xpack.j2
+        dest: /etc/metricbeat/modules.d/kibana-xpack.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart metricbeat
+
+  handlers:
+    - name: restart metricbeat
+      become: yes
+      systemd:
+        name: metricbeat
+        state: restarted

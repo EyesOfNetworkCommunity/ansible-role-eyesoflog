@@ -1,0 +1,68 @@
+# Eyes of Log - Ressources integration
+# Axians - Brice VALENZA
+
+---
+- name: Ressources integration
+  hosts: elasticsearch_master_nodes[0]
+  gather_facts: no
+  tasks: 
+
+    - name: Create All pipelines from files/EyesOfLog/pipelines folder to Elasticsearch (use master node)
+      uri:
+        url: "https://{{ hostvars[inventory_hostname].groups.elasticsearch_master_nodes[0] }}:{{ eol.cluster.es_api_port }}/_ingest/pipeline/{{ item | basename | splitext | first }}"
+        method: PUT
+        status_code: 200
+        user: "{{ eol.cluster.api_username }}"
+        password: "{{ eol.cluster.api_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: "{{ lookup('file', item) }}"
+        validate_certs: "no"
+      with_fileglob:
+        - "files/EyesOfLog/pipelines/*.json"
+
+
+    - name: Create All component template from files/EyesOfLog/component-template folder to Elasticsearch (use master node)
+      uri:
+        url: "https://{{ hostvars[inventory_hostname].groups.elasticsearch_master_nodes[0] }}:{{ eol.cluster.es_api_port }}/_component_template/{{ item | basename | splitext | first }}"
+        method: PUT
+        status_code: 200
+        user: "{{ eol.cluster.api_username }}"
+        password: "{{ eol.cluster.api_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: "{{ lookup('file', item) }}"
+        validate_certs: "no"
+      with_fileglob:
+        - "files/EyesOfLog/component-template/*.json"
+
+
+    - name: Create default lifecycle Policies for EyesOfLogs
+      uri:
+        url: "https://{{ hostvars[inventory_hostname].groups.elasticsearch_master_nodes[0] }}:{{ eol.cluster.es_api_port }}/_ilm/policy/{{ item | basename | splitext | first }}"
+        method: PUT
+        status_code: 200
+        user: "{{ eol.cluster.api_username }}"
+        password: "{{ eol.cluster.api_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: "{{ lookup('template', item) }}"
+        validate_certs: "no"
+      with_fileglob:
+        - "files/EyesOfLog/lifecycle/*.json"
+    
+
+    - name: Create All index templates from files/EyesOfLog/index_templates folder to Elasticsearch (use master node)
+      uri:
+        url: "https://{{ hostvars[inventory_hostname].groups.elasticsearch_master_nodes[0] }}:{{ eol.cluster.es_api_port }}/_index_template/{{ item | basename | splitext | first }}"
+        method: PUT
+        status_code: 200
+        user: "{{ eol.cluster.api_username }}"
+        password: "{{ eol.cluster.api_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: "{{ lookup('template', item) }}"
+        validate_certs: "no"
+      with_fileglob:
+        - "files/EyesOfLog/index_templates/*.json"
+      register: this

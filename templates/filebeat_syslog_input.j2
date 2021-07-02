@@ -1,0 +1,20 @@
+- type: udp
+  enabled: true
+  fields_under_root: true
+  host: "0.0.0.0:5515"
+  processors:
+    - dissect:
+        tokenizer: "%{host.ip}:%{host.port}"
+        field: log.source.address
+        target_prefix: ""
+      
+- type: tcp
+  enabled: true
+  fields_under_root: true
+  host: "0.0.0.0:5515"
+  processors:
+    - dissect:
+        tokenizer: "%{host.ip}:%{host.port}"
+        field: log.source.address
+        target_prefix: ""
+

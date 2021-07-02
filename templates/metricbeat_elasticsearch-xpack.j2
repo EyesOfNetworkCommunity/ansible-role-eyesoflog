@@ -1,0 +1,17 @@
+  - module: elasticsearch
+    xpack.enabled: true
+    period: 10s
+    hosts : ["https://{{ ansible_hostname }}:9200"]
+    scope: node 
+    username: "{{ eol.cluster.api_username }}"
+    password: "{{ eol.cluster.api_password }}"
+    ssl.enabled: true
+    ssl.verification_mode: "full"
+    ssl.certificate_authorities: ["/etc/metricbeat/certs/{{ eol.cluster.eol_ca_cert_name }}"]
+    ssl.certificate: /etc/metricbeat/certs/{{ ansible_hostname }}.crt
+    ssl.key: /etc/metricbeat/certs/{{ ansible_hostname }}_privatekey.pem
+{% if eol.cluster.ssl_key_passphrase is defined %}
+    ssl.key_passphrase: "{{ eol.cluster.ssl_key_passphrase }}"
+{% endif %}
+
+    

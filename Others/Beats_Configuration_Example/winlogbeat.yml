@@ -1,0 +1,41 @@
+winlogbeat.event_logs:
+  - name: Application
+    ignore_older: 72h
+    fields_under_root: true
+    fields: {event.provider: application}
+
+  - name: System
+    fields_under_root: true
+    fields: {event.provider: system}
+
+  - name: Security
+    fields_under_root: true
+    fields: {event.provider: security}
+    processors:
+      - script:
+          lang: javascript
+          id: security
+          file: ${path.home}/module/security/config/winlogbeat-security.js
+
+# ====================== Elasticsearch template settings =======================
+
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+# ================================== Outputs ===================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+# ---------------------------- Elasticsearch Output ----------------------------
+output.elasticsearch:
+  hosts: ["IP_INGEST_NODE:9200"]
+  protocol: "https"
+  username: "USERNAME_A_REMPLIR"
+  password: "MDP_A_REMPLIR"
+  index: "eol-winlogbeat-%{[event][provider]}"
+
+# ================================= Processors =================================
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
